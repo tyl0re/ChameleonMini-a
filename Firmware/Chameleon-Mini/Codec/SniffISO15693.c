@@ -52,7 +52,6 @@ static volatile uint8_t ReaderByteCount;
 static volatile uint8_t CardByteCount;
 static volatile uint16_t SampleDataCount;
 static volatile uint8_t bBrokenFrame;
-static bool bAutoThreshold = true;
 
 /////////////////////////////////////////////////
 // VCD->VICC
@@ -273,20 +272,6 @@ INLINE void SNIFF_ISO15693_READER_EOC_VCD(void) {
 // VICC->VCD
 /////////////////////////////////////////////////
 
-
-/* Inline function to set the threshold, if bAutoThreshold is enabled*/
-INLINE void SetDacCh0Data(uint16_t ch0data) {
-    /* TODO: Check if either of the branches can be avoided */
-    /* to optimize the performance */
-    if (bAutoThreshold) {
-        if (ch0data < 0xFFF)
-            DACB.CH0DATA = ch0data;
-        else
-            DACB.CH0DATA = 0xFFF;
-    }
-    return;
-}
-
 /* Initialize card sniffing options
 Note: Currently implemented only single subcarrier SOC detection
  */
@@ -409,8 +394,8 @@ INLINE void CardSniffInit(void) {
     ADCA.EVCTRL = ADC_SWEEP_01_gc;
 
     /* Write threshold to the DAC channel 0 (connected to Analog Comparator positive input) */
-    SetDacCh0Data(DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 3)); /* Slightly increase DAC output to ease triggering */
-
+    DACB.CH0DATA = DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 3); /* Slightly increase DAC output to ease triggering */
+    DACB.CH0DATA |= -( (DACB.CH0DATA & 0xFFF) < DemodFloorNoiseLevel); /* Branchfree saturating addition */
 
     /**
      * Finally, now that we have the DAC set up, configure analog comparator A (the only one in this MCU)
@@ -464,8 +449,8 @@ ISR_SHARED isr_SNIFF_ISO15693_ACA_AC0_VECT(void) {
 
     ACA.AC0CTRL = AC_ENABLE_bm | AC_HSMODE_bm | AC_HYSMODE_LARGE_gc | AC_INTMODE_RISING_gc | AC_INTLVL_OFF_gc; /* Disable this interrupt */
 
-    SetDacCh0Data(DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 2)); /* Blindly increase threshold after 1 pulse */
-
+    DACB.CH0DATA = DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 2); /* Blindly increase threshold after 1 pulse */
+    DACB.CH0DATA |= -( (DACB.CH0DATA & 0xFFF) < DemodFloorNoiseLevel); /* Branchfree saturating addition */
     /* Note: by the time the DAC has changed its output, we're already after the 2nd pulse */
 }
 
@@ -475,8 +460,9 @@ ISR_SHARED isr_SNIFF_ISO15693_ACA_AC0_VECT(void) {
 ISR_SHARED isr_SNIFF_ISO15693_CODEC_TIMER_TIMESTAMPS_CCA_VECT(void) {
 
     uint16_t TempRead = ADCA.CH1RES; /* Can't possibly be greater than 0xFFF since the dac has 12 bit res */
+    DACB.CH0DATA = TempRead - ANTENNA_LEVEL_OFFSET; /* Further increase DAC output after 3 pulses with value from PORTA Pin 2 (DEMOD-READER/2.3) */
+    DACB.CH0DATA &= -(DACB.CH0DATA <= TempRead); /* Branchfree saturating subtraction */
 
-    SetDacCh0Data(TempRead - ANTENNA_LEVEL_OFFSET); /* Further increase DAC output after 3 pulses with value from PORTA Pin 2 (DEMOD-READER/2.3) */
     CODEC_TIMER_TIMESTAMPS.INTCTRLB = TC_CCAINTLVL_OFF_gc; /* Disable this interrupt */
 }
 
@@ -494,8 +480,8 @@ ISR_SHARED isr_SNIFF_ISO15693_CODEC_TIMER_LOADMOD_CCA_VECT(void) {
 
         CODEC_TIMER_LOADMOD.INTCTRLB = TC_CCAINTLVL_OFF_gc; /* Disable all compare interrupts, including this one */
 
-        SetDacCh0Data(DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 3)); /* Restore DAC output (AC negative comparation threshold) to pre-AC0 interrupt update value */
-
+        DACB.CH0DATA = DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 3); /* Restore DAC output (AC negative comparation threshold) to pre-AC0 interrupt update value */
+        DACB.CH0DATA |= -( (DACB.CH0DATA & 0xFFF) < DemodFloorNoiseLevel); /* Branchfree saturating addition */
         ACA.AC0CTRL |= AC_INTLVL_HI_gc; /* Re-enable analog comparator interrupt to search for another pulse */
 
         CODEC_TIMER_TIMESTAMPS.INTCTRLB = TC_CCAINTLVL_HI_gc; /* Re enable CCA interrupt in case it was triggered and then is now disabled */
@@ -578,8 +564,8 @@ ISR_SHARED isr_SNIFF_ISO15693_CODEC_TIMER_LOADMOD_OVF_VECT(void) {
                     /* No SOC. The train of pulses was actually garbage. */
 
                     /* Restore DAC output to intial value */
-                    SetDacCh0Data(DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 3));
-
+                    DACB.CH0DATA = DemodFloorNoiseLevel + (DemodFloorNoiseLevel >> 3);
+                    DACB.CH0DATA |= -( (DACB.CH0DATA & 0xFFF) < DemodFloorNoiseLevel); /* Branchfree saturating addition */
 
                     /* Re enable AC interrupt */
                     ACA.AC0CTRL = AC_ENABLE_bm | AC_HSMODE_bm | AC_HYSMODE_LARGE_gc | AC_INTMODE_RISING_gc | AC_INTLVL_HI_gc;
@@ -642,14 +628,14 @@ ISR_SHARED isr_SNIFF_ISO15693_CODEC_TIMER_LOADMOD_OVF_VECT(void) {
                     CardSniffDeinit();
 
                 } else {
-                    DataRegister  = ((SampleRegisterL & 0b00000011) == 0b00000001) << 3;
-                    DataRegister |= ((SampleRegisterL & 0b00001100) == 0b00000100) << 2;
-                    DataRegister |= ((SampleRegisterL & 0b00110000) == 0b00010000) << 1;
-                    DataRegister |= ((SampleRegisterL & 0b11000000) == 0b01000000);  /* Bottom 2 bits */
-                    DataRegister |= ((SampleRegisterH & 0b00000011) == 0b00000001) << 7;
-                    DataRegister |= ((SampleRegisterH & 0b00001100) == 0b00000100) << 6;
-                    DataRegister |= ((SampleRegisterH & 0b00110000) == 0b00010000) << 5;
-                    DataRegister |= ((SampleRegisterH & 0b11000000) == 0b01000000) << 4;
+                    DataRegister  = ( (SampleRegisterL & 0b00000011) == 0b00000001) << 3;
+                    DataRegister |= ( (SampleRegisterL & 0b00001100) == 0b00000100) << 2;
+                    DataRegister |= ( (SampleRegisterL & 0b00110000) == 0b00010000) << 1;
+                    DataRegister |= ( (SampleRegisterL & 0b11000000) == 0b01000000); /* Bottom 2 bits */
+                    DataRegister |= ( (SampleRegisterH & 0b00000011) == 0b00000001) << 7;
+                    DataRegister |= ( (SampleRegisterH & 0b00001100) == 0b00000100) << 6;
+                    DataRegister |= ( (SampleRegisterH & 0b00110000) == 0b00010000) << 5;
+                    DataRegister |= ( (SampleRegisterH & 0b11000000) == 0b01000000) << 4;
 
                     *CodecBufferPtr = DataRegister;
                     CodecBufferPtr++;
@@ -706,34 +692,6 @@ void SniffISO15693CodecInit(void) {
     ReaderSniffInit();
 }
 
-/************************************************************
-    Function used by the Terminal command to display (GET)
-    the state of the Autothreshold Feature.
-************************************************************/
-bool SniffISO15693GetAutoThreshold(void) {
-    return bAutoThreshold;
-}
-
-/************************************************************
-    Function used by the Application level to disable the
-    Autothreshold Feature.
-    If it is disabled: The threshold will be taken from
-    GlobalSettings.ActiveSettingPtr->ReaderThreshold
-************************************************************/
-void SniffISO15693CtrlAutoThreshold(bool enable) {
-    bAutoThreshold = enable;
-    return;
-}
-
-/************************************************************
-    Function used by the Application level to get the FloorNoise
-    FloorNoise can be used to define the scanning range for the
-    Autocalibration.
-************************************************************/
-uint16_t SniffISO15693GetFloorNoise(void) {
-    return DemodFloorNoiseLevel;
-}
-
 void SniffISO15693CodecDeInit(void) {
     /* Gracefully shutdown codec */
     CODEC_DEMOD_IN_PORT.INT0MASK = 0;
@@ -784,7 +742,7 @@ void SniffISO15693CodecTask(void) {
 
     }
 
-    if (Flags.CardDemodFinished) {
+    if(Flags.CardDemodFinished) {
         Flags.CardDemodFinished = 0;
 
         if (CardByteCount > 0) {

@@ -28,7 +28,6 @@ This notice must be retained at the top of all source files where indicated.
 #define __DESFIRE_CRYPTO_H__
 
 #include "../../Common.h"
-#include "../CryptoAES128.h"
 
 #include "DESFireFirmwareSettings.h"
 
@@ -46,28 +45,28 @@ This notice must be retained at the top of all source files where indicated.
 #define DESFIRE_COMMS_CIPHERTEXT_AES128    (0x04)
 #define DESFIRE_DEFAULT_COMMS_STANDARD     (DESFIRE_COMMS_PLAINTEXT)
 
-extern BYTE DesfireCommMode;
-
 #define CRYPTO_TYPE_ANY         (0x00)
 #define CRYPTO_TYPE_DES         (0x01)
 #define CRYPTO_TYPE_2KTDEA      (0x0A)
 #define CRYPTO_TYPE_3K3DES      (0x1A)
 #define CRYPTO_TYPE_AES128      (0x4A)
 
-#define CryptoTypeDES(ct)    \
+#define CryptoTypeDES(ct) \
     ((ct == CRYPTO_TYPE_DES) || (ct == CRYPTO_TYPE_ANY))
 #define CryptoType2KTDEA(ct) \
     ((ct == CRYPTO_TYPE_2KTDEA) || (ct == CRYPTO_TYPE_ANY))
 #define CryptoType3KTDEA(ct) \
     ((ct == CRYPTO_TYPE_3K3DES) || (ct == CRYPTO_TYPE_ANY))
-#define CryptoTypeAES(ct)    \
+#define CryptoTypeAES(ct) \
     ((ct == CRYPTO_TYPE_AES128) || (ct == CRYPTO_TYPE_ANY))
 
 /* Key sizes, block sizes (in bytes): */
+#define CRYPTO_AES_KEY_SIZE                  (16)
 #define CRYPTO_MAX_KEY_SIZE                  (24)
 #define CRYPTO_MAX_BLOCK_SIZE                (16)
 #define DESFIRE_AES_IV_SIZE                  (CRYPTO_AES_BLOCK_SIZE)
-#define CRYPTO_CHALLENGE_RESPONSE_BYTES      (16)
+#define DESFIRE_SESSION_KEY_SIZE             (CRYPTO_3KTDEA_KEY_SIZE)
+#define CRYPTO_CHALLENGE_RESPONSE_BYTES      (8)
 
 typedef BYTE CryptoKeyBufferType[CRYPTO_MAX_KEY_SIZE];
 typedef BYTE CryptoIVBufferType[CRYPTO_MAX_BLOCK_SIZE];
@@ -76,9 +75,9 @@ extern CryptoKeyBufferType SessionKey;
 extern CryptoIVBufferType SessionIV;
 extern BYTE SessionIVByteSize;
 
-extern bool    Authenticated;
+extern uint8_t Authenticated;
 extern uint8_t AuthenticatedWithKey;
-extern bool    AuthenticatedWithPICCMasterKey;
+extern uint8_t AuthenticatedWithPICCMasterKey;
 extern uint8_t CryptoAuthMethod;
 extern uint8_t ActiveCommMode;
 
@@ -92,8 +91,8 @@ bool IsAuthenticated(void);
 
 BYTE GetDefaultCryptoMethodKeySize(uint8_t cryptoType);
 BYTE GetCryptoMethodCommSettings(uint8_t cryptoType);
-
-bool generateSessionKey(uint8_t *sessionKey, uint8_t *rndA, uint8_t *rndB, uint16_t cryptoType);
+const char *GetCryptoMethodDesc(uint8_t cryptoType);
+const char *GetCommSettingsDesc(uint8_t cryptoType);
 
 #define DESFIRE_MAC_LENGTH          4
 #define DESFIRE_CMAC_LENGTH         8    // in bytes
@@ -119,14 +118,20 @@ BYTE GetCryptoKeyTypeFromAuthenticateMethod(BYTE authCmdMethod);
 
 #include "../CryptoAES128.h"
 
-extern CryptoAESConfig_t AESCryptoContext;
+typedef uint8_t DesfireAESCryptoKey[CRYPTO_AES_KEY_SIZE];
 
-void InitAESCryptoKeyData(void);
+extern CryptoAESConfig_t AESCryptoContext;
+extern DesfireAESCryptoKey AESCryptoSessionKey;
+extern DesfireAESCryptoKey AESCryptoIVBuffer;
+
+void InitAESCryptoKeyData(DesfireAESCryptoKey *cryptoKeyData);
 
 typedef void (*CryptoAESCBCFuncType)(uint16_t, void *, void *, uint8_t *, uint8_t *);
 
 typedef uint8_t (*CryptoTransferSendFunc)(uint8_t *, uint8_t);
 typedef uint8_t (*CryptoTransferReceiveFunc)(uint8_t *, uint8_t);
+uint8_t CryptoAESTransferEncryptSend(uint8_t *Buffer, uint8_t Count, const uint8_t *Key);
+uint8_t CryptoAESTransferEncryptReceive(uint8_t *Buffer, uint8_t Count, const uint8_t *Key);
 
 #define DESFIRE_MAX_PAYLOAD_AES_BLOCKS        (DESFIRE_MAX_PAYLOAD_SIZE / CRYPTO_AES_BLOCK_SIZE)
 
@@ -135,10 +140,15 @@ typedef uint8_t (*CryptoTransferReceiveFunc)(uint8_t *, uint8_t);
  *********************************************************/
 
 #include "../CryptoTDEA.h"
-#include "../CryptoCMAC.h"
 
 #define DESFIRE_2KTDEA_NONCE_SIZE            (CRYPTO_DES_BLOCK_SIZE)
 #define DESFIRE_DES_IV_SIZE                  (CRYPTO_DES_BLOCK_SIZE)
 #define DESFIRE_MAX_PAYLOAD_TDEA_BLOCKS      (DESFIRE_MAX_PAYLOAD_SIZE / CRYPTO_DES_BLOCK_SIZE)
+
+/* Checksum routines: */
+void TransferChecksumUpdateCRCA(const uint8_t *Buffer, uint8_t Count);
+uint8_t TransferChecksumFinalCRCA(uint8_t *Buffer);
+void TransferChecksumUpdateMACTDEA(const uint8_t *Buffer, uint8_t Count);
+uint8_t TransferChecksumFinalMACTDEA(uint8_t *Buffer);
 
 #endif

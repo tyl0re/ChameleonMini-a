@@ -52,7 +52,7 @@ This notice must be retained at the top of all source files where indicated.
 /* Data about an application's file is currently kept in this structure.
  * The location of these structures is defined by the file index.
  */
-typedef struct DESFIRE_FIRMWARE_PACKING DESFIRE_FIRMWARE_ALIGNAT {
+typedef struct DESFIRE_FIRMWARE_PACKING {
     uint8_t FileType;
     uint8_t FileNumber;
     uint16_t FileSize;
@@ -86,7 +86,7 @@ typedef struct DESFIRE_FIRMWARE_PACKING DESFIRE_FIRMWARE_ALIGNAT {
 
 uint16_t GetFileSizeFromFileType(DESFireFileTypeSettings *File);
 
-typedef struct DESFIRE_FIRMWARE_PACKING DESFIRE_FIRMWARE_ALIGNAT {
+typedef struct DESFIRE_FIRMWARE_PACKING {
     BYTE Num;
     DESFireFileTypeSettings File;
 } SelectedFileCacheType;
@@ -148,6 +148,8 @@ uint16_t WriteDataFileIterator(uint8_t *Buffer, uint16_t ByteCount);
      (BYTE) (((0x0f00 & AccessRights) >> 8) & 0x000f)
 #define GetChangePermissions(AccessRights) \
      (BYTE) (((0xf000 & AccessRights) >> 12) & 0x000f)
+
+const char *GetFileAccessPermissionsDesc(uint16_t fileAccessRights);
 
 /*
  * There are also command/instruction-wise

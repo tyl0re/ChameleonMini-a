@@ -62,15 +62,15 @@ eventTypes = {
     0x13: { 'name': 'UID SET',        'decoder': binaryDecoder },
     0x20: { 'name': 'RESET APP',      'decoder': noDecoder },
 
-    0x40: { 'name': 'CODEC RX',          'decoder': binaryDecoder },
-    0x41: { 'name': 'CODEC TX',          'decoder': binaryDecoder },
+    0x40: { 'name': 'CODEC RX',       'decoder': binaryDecoder },
+    0x41: { 'name': 'CODEC TX',       'decoder': binaryDecoder },
     0x42: { 'name': 'CODEC RX W/PARITY', 'decoder': binaryDecoder },
     0x43: { 'name': 'CODEC TX W/PARITY', 'decoder': binaryDecoder },
 
-    0x44: { 'name': 'CODEC RX SNI READER',                  'decoder': binaryDecoder },
-    0x45: { 'name': 'CODEC RX SNI READER W/PARITY',         'decoder': binaryParityDecoder },
-    0x46: { 'name': 'CODEC RX SNI CARD',                    'decoder': binaryDecoder },
-    0x47: { 'name': 'CODEC RX SNI CARD W/PARITY',           'decoder': binaryParityDecoder },
+    0x44: { 'name': 'CODEC RX SNI READER',          'decoder': binaryDecoder },
+    0x45: { 'name': 'CODEC RX SNI READER W/PARITY', 'decoder': binaryParityDecoder },
+    0x46: { 'name': 'CODEC RX SNI CARD',            'decoder': binaryDecoder },
+    0x47: { 'name': 'CODEC RX SNI CARD W/PARITY',   'decoder': binaryParityDecoder },
     0x48: { 'name': 'CODEC RX SNI READER FIELD DETECTED',   'decoder': noDecoder },
    
     0x53: { 'name': 'ISO14443A (DESFIRE) STATE',       'decoder': binaryDecoder },
@@ -87,10 +87,7 @@ eventTypes = {
     0x90: { 'name': 'APP AUTH',       'decoder': binaryDecoder },
     0x91: { 'name': 'APP HALT',       'decoder': binaryDecoder },
     0x92: { 'name': 'APP UNKNOWN',    'decoder': binaryDecoder },
-    0x93: { 'name': 'APP REQA',       'decoder': binaryDecoder },
-    0x94: { 'name': 'APP WUPA',       'decoder': binaryDecoder },
-    0x95: { 'name': 'APP DESELECT',   'decoder': binaryDecoder },
-
+    
     0xA0: { 'name': 'APP AUTHING' ,    'decoder': binaryDecoder },
     0xA1: { 'name': 'APP AUTHED',      'decoder': binaryDecoder },
 
@@ -98,12 +95,11 @@ eventTypes = {
     0xC1: { 'name': 'APP CSUM FAILED', 'decoder': binaryDecoder },
     0xC2: { 'name': 'APP NOT AUTHED',  'decoder': binaryDecoder },
  
-    0xD0: { 'name': 'APP DESFIRE AUTH KEY',  'decoder': binaryDecoder },
-    0xD1: { 'name': 'APP DESFIRE NONCE B',   'decoder': binaryDecoder },
-    0xD2: { 'name': 'APP DESFIRE NONCE AB',  'decoder': binaryDecoder },
-    0xD3: { 'name': 'APP DESFIRE SESION IV', 'decoder': binaryDecoder },
-
-    0xE0: { 'name': 'APP DESFIRE GENERIC ERROR',         'decoder': textDecoder },
+    0xD0: { 'name': 'APP DESFIRE AUTH KEY', 'decoder': binaryDecoder },
+    0xD1: { 'name': 'APP DESFIRE NONCE B',  'decoder': binaryDecoder },
+    0xD2: { 'name': 'APP DESFIRE NONCE AB', 'decoder': binaryDecoder },
+ 
+    0xE0: { 'name': 'APP DESFIRE GENERIC ERROR',         'decoder': binaryDecoder },
     0xE1: { 'name': 'APP DESFIRE STATUS INFO',           'decoder': binaryDecoder },
     0xE2: { 'name': 'APP DESFIRE DEBUG OUTPUT',          'decoder': binaryDecoder },
     0xE3: { 'name': 'APP DESFIRE INCOMING',              'decoder': binaryDecoder },

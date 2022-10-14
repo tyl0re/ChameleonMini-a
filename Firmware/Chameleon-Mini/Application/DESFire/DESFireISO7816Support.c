@@ -26,15 +26,7 @@ This notice must be retained at the top of all source files where indicated.
 #include "DESFirePICCHeaderLayout.h"
 #include "DESFireISO7816Support.h"
 #include "DESFireInstructions.h"
-#include "DESFireStatusCodes.h"
 #include "../ISO14443-3A.h"
-
-/* Data for the NDEF Tag Application / Mifare DESFire Tag Application in the table:
- * https://www.eftlab.com/knowledge-base/211-emv-aid-rid-pix/
- */
-const uint8_t MIFARE_DESFIRE_TAG_AID[9] = {
-    0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x00
-};
 
 Iso7816WrappedParams_t Iso7816P1Data = ISO7816_NO_DATA;
 Iso7816WrappedParams_t Iso7816P2Data = ISO7816_NO_DATA;
@@ -42,18 +34,15 @@ bool Iso7816FileSelected = false;
 uint8_t Iso7816FileOffset = 0;
 uint8_t Iso7816EfIdNumber = ISO7816_EF_NOT_SPECIFIED;
 
-Iso7816WrappedCommandType_t IsWrappedISO7816CommandType(uint8_t *Buffer, uint16_t ByteCount) {
-    if (ByteCount >= 6 && Buffer[3] == ByteCount - 6) {
-        return ISO7816_WRAPPED_CMD_TYPE_PM3RAW;
-    } else if (ByteCount >= 3 && Buffer[2] == STATUS_ADDITIONAL_FRAME) {
-        return ISO7816_WRAPPED_CMD_TYPE_PM3_ADDITIONAL_FRAME;
-    } else if (ByteCount <= ISO7816_PROLOGUE_SIZE + ISO14443A_CRCA_SIZE + 2) {
-        return ISO7816_WRAPPED_CMD_TYPE_NONE;
+bool IsWrappedISO7816CommandType(uint8_t *Buffer, uint16_t ByteCount) {
+    if (ByteCount <= ISO7816_PROLOGUE_SIZE + ISO14443A_CRCA_SIZE + 2) {
+        return false;
+    } else if (!ISO14443ACheckCRCA(Buffer, ByteCount - 2)) {
+        return false;
     } else if (!Iso7816CLA(Buffer[2])) {
-        return ISO7816_WRAPPED_CMD_TYPE_NONE;
-    } else {
-        return ISO7816_WRAPPED_CMD_TYPE_STANDARD;
+        return false;
     }
+    return true;
 }
 
 uint16_t SetIso7816WrappedParametersType(uint8_t *Buffer, uint16_t ByteCount) {

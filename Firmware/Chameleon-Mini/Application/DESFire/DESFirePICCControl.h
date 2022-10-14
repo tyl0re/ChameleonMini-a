@@ -50,6 +50,8 @@ extern SelectedFileCacheType SelectedFile;
 
 typedef void (*TransferSourceFuncType)(BYTE *Buffer, BYTE Count);
 typedef void (*TransferSinkFuncType)(BYTE *Buffer, BYTE Count);
+typedef void (*TransferChecksumUpdateFuncType)(const BYTE *Buffer, BYTE Count);
+typedef BYTE(*TransferChecksumFinalFuncType)(BYTE *Buffer);
 typedef BYTE(*TransferEncryptFuncType)(BYTE *Buffer, BYTE Count);
 typedef TransferStatus(*PiccToPcdTransferFilterFuncType)(BYTE *Buffer);
 typedef BYTE(*PcdToPiccTransferFilterFuncType)(BYTE *Buffer, BYTE Count);
@@ -61,11 +63,32 @@ typedef union DESFIRE_FIRMWARE_PACKING {
     } GetApplicationIds;
     BYTE BlockBuffer[CRYPTO_MAX_BLOCK_SIZE];
     struct DESFIRE_FIRMWARE_ALIGNAT {
+        TransferChecksumUpdateFuncType UpdateFunc;
+        TransferChecksumFinalFuncType FinalFunc;
+        BYTE AvailablePlaintext;
+        struct DESFIRE_FIRMWARE_ALIGNAT {
+            union DESFIRE_FIRMWARE_ALIGNAT {
+                CryptoAESCBCFuncType   AESFunc;
+                CryptoTDEACBCFuncType  TDEAFunc;
+            } CryptoChecksumFunc;
+            union {
+                SIZET CRCA;
+                UINT  CRC32;
+                BYTE  CMAC[DESFIRE_CMAC_LENGTH];
+            };
+        } MACData;
+    } Checksums;
+    struct DESFIRE_FIRMWARE_ALIGNAT {
         SIZET BytesLeft;
         struct DESFIRE_FIRMWARE_ALIGNAT {
             TransferSourceFuncType Func;
             SIZET Pointer; /* in FRAM */
         } Source;
+        struct DESFIRE_FIRMWARE_ALIGNAT {
+            BOOL FirstPaddingBitSet;
+            TransferEncryptFuncType Func;
+            BYTE AvailablePlaintext;
+        } Encryption;
     } ReadData;
     struct DESFIRE_FIRMWARE_ALIGNAT {
         SIZET BytesLeft;
@@ -73,6 +96,10 @@ typedef union DESFIRE_FIRMWARE_PACKING {
             TransferSinkFuncType Func;
             SIZET Pointer; /* in FRAM */
         } Sink;
+        struct DESFIRE_FIRMWARE_ALIGNAT {
+            TransferEncryptFuncType Func;
+            BYTE AvailablePlaintext;
+        } Encryption;
     } WriteData;
 } TransferStateType;
 extern TransferStateType TransferState;
@@ -87,26 +114,18 @@ uint8_t ReadDataFilterSetup(uint8_t CommSettings);
 uint8_t WriteDataFilterSetup(uint8_t CommSettings);
 
 /* PICC management */
-void FormatPicc(void);
-void CreatePiccApp(void);
-
-void InitialisePiccBackendEV0(uint8_t StorageSize, bool formatPICC);
-void InitialisePiccBackendEV1(uint8_t StorageSize, bool formatPICC);
-void InitialisePiccBackendEV2(uint8_t StorageSize, bool formatPICC);
-
-void FactoryFormatPiccEV0(void);
-void FactoryFormatPiccEV1(uint8_t StorageSize);
-void FactoryFormatPiccEV2(uint8_t StorageSize);
-
+void InitialisePiccBackendEV0(uint8_t StorageSize);
+void InitialisePiccBackendEV1(uint8_t StorageSize);
 void ResetPiccBackend(void);
-
 bool IsEmulatingEV1(void);
-
 void GetPiccHardwareVersionInfo(uint8_t *Buffer);
 void GetPiccSoftwareVersionInfo(uint8_t *Buffer);
 void GetPiccManufactureInfo(uint8_t *Buffer);
 uint8_t GetPiccKeySettings(void);
-
+void FormatPicc(void);
+void CreatePiccApp(void);
+void FactoryFormatPiccEV0(void);
+void FactoryFormatPiccEV1(uint8_t StorageSize);
 void GetPiccUid(ConfigurationUidType Uid);
 void SetPiccUid(ConfigurationUidType Uid);
 

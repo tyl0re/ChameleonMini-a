@@ -46,14 +46,12 @@
 #define CRYPTO_AES_KEY_SIZE_192            1     // 192-bit
 #define CRYPTO_AES_KEY_SIZE_256            2     // 256-bit
 
-/* AES Operation cipher modes */
+/* AES Operation cipher mode */
 #define CRYPTO_AES_ECB_MODE                0     // Electronic Code Book mode
 #define CRYPTO_AES_CBC_MODE                1     // Cipher Block Chaining mode
-#define CRYPTO_AES_OFB_MODE                2     // Output FeedBack mode (NOT SUPPORTED)
-#define CRYPTO_AES_CFB_MODE                3     // Cipher FeedBack mode (NOT SUPPORTED)
-#define CRYPTO_AES_CTR_MODE                4     // Counter mode (NOT SUPPORTED)
-
-extern uint8_t __CryptoAESOpMode;
+#define CRYPTO_AES_OFB_MODE                2     // Output FeedBack mode
+#define CRYPTO_AES_CFB_MODE                3     // Cipher FeedBack mode
+#define CRYPTO_AES_CTR_MODE                4     // Counter mode
 
 /* AES URAD Type */
 #define CRYPTO_AES_URAT_INPUTWRITE_DMA     0     // Input Data Register written during the data processing in DMA mode
@@ -63,18 +61,15 @@ extern uint8_t __CryptoAESOpMode;
 #define CRYPTO_AES_URAT_MRWRITE_SUBKEY     4     // Mode Register written during the sub-keys generation
 #define CRYPTO_AES_URAT_READ_WRITEONLY     5     // Write-only register read access
 
-/* Error and status codes */
-#define CRYPTO_AES_EXIT_SUCCESS            0
-#define CRYPTO_AES_EXIT_UNEVEN_BLOCKS      1
-
 /* Define types for the AES-128 specific implementation: */
 #define CRYPTO_AES_KEY_SIZE                16
 typedef uint8_t CryptoAESKey_t[CRYPTO_AES_KEY_SIZE];
 
-#define CRYPTO_AES_BLOCK_SIZE	           16
+#define CRYPTO_AES_BLOCK_SIZE	             16
 typedef uint8_t CryptoAESBlock_t[CRYPTO_AES_BLOCK_SIZE];
 
-#define CryptoAESBytesToBlocks(byteCount)  ((byteCount + CRYPTO_AES_BLOCK_SIZE - 1) / CRYPTO_AES_BLOCK_SIZE)
+#define CryptoAESBytesToBlocks(byteCount) \
+     ((byteCount + CRYPTO_AES_BLOCK_SIZE - 1) / CRYPTO_AES_BLOCK_SIZE)
 
 typedef enum aes_dec {
     AES_ENCRYPT,
@@ -104,20 +99,18 @@ typedef enum aes_intlvl {
 /* AES interrupt callback function pointer. */
 typedef void (*aes_callback_t)(void);
 
-#define CRYPTO_AES128_STRUCT_ATTR               __attribute((aligned(1)))
-
 typedef struct {
     CryptoAESDec_t   ProcessingMode;
     uint8_t          ProcessingDelay;            // [0,15]
     CryptoAESAuto_t  StartMode;
     unsigned char    OpMode;                     // 0 = ECB, 1 = CBC, 2 = OFB, 3 = CFB, 4 = CTR
     CryptoAESXor_t   XorMode;
-} CryptoAESConfig_t CRYPTO_AES128_STRUCT_ATTR;
+} CryptoAESConfig_t;
 
 typedef struct {
     unsigned char   datrdy;                      // ENABLE/DISABLE; Data ready interrupt
     unsigned char   urad;                        // ENABLE/DISABLE; Unspecified Register Access Detection
-} CryptoAES_ISRConfig_t CRYPTO_AES128_STRUCT_ATTR;
+} CryptoAES_ISRConfig_t;
 
 /* AES encryption complete. */
 #define AES_ENCRYPTION_COMPLETE  (1UL << 0)
@@ -143,32 +136,40 @@ void aes_set_callback(const aes_callback_t callback);
 
 void CryptoAESGetConfigDefaults(CryptoAESConfig_t *ctx);
 void CryptoAESInitContext(CryptoAESConfig_t *ctx);
+uint16_t CryptoAESGetPaddedBufferSize(uint16_t bufSize);
 
-int CryptoAESEncryptBuffer(uint16_t Count, uint8_t *Plaintext, uint8_t *Ciphertext,
-                           uint8_t *IV, const uint8_t *Key);
-int CryptoAESDecryptBuffer(uint16_t Count, uint8_t *Plaintext, uint8_t *Ciphertext,
-                           uint8_t *IV, const uint8_t *Key);
+void CryptoAESEncryptBlock(uint8_t *Plaintext, uint8_t *Ciphertext, const uint8_t *Key, bool);
+void CryptoAESDecryptBlock(uint8_t *Plaintext, uint8_t *Ciphertext, const uint8_t *Key);
+uint8_t CryptoAESEncryptBuffer(uint16_t Count, uint8_t *Plaintext, uint8_t *Ciphertext,
+                               const uint8_t *IV, const uint8_t *Key);
+uint8_t CryptoAESDecryptBuffer(uint16_t Count, uint8_t *Plaintext, uint8_t *Ciphertext,
+                               const uint8_t *IV, const uint8_t *Key);
 
 typedef uint8_t (*CryptoAESFuncType)(uint8_t *, uint8_t *, uint8_t *);
 typedef struct {
     CryptoAESFuncType  cryptFunc;
     uint16_t           blockSize;
-} CryptoAES_CBCSpec_t CRYPTO_AES128_STRUCT_ATTR;
+} CryptoAES_CBCSpec_t;
 
-#ifdef ENABLE_CRYPTO_TESTS
-void CryptoAESDecrypt_CBCSend(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
-                              uint8_t *Key, uint8_t *IV);
-void CryptoAESDecrypt_CBCReceive(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
-                                 uint8_t *Key, uint8_t *IV);
-#endif
+void CryptoAES_CBCSend(uint16_t Count, void *Plaintext, void *Ciphertext,
+                       uint8_t *IV, uint8_t *Key,
+                       CryptoAES_CBCSpec_t CryptoSpec);
+void CryptoAES_CBCRecv(uint16_t Count, void *Plaintext, void *Ciphertext,
+                       uint8_t *IV, uint8_t *Key,
+                       CryptoAES_CBCSpec_t CryptoSpec);
 
-void CryptoAESEncrypt_CBCReceive(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
-                                 uint8_t *Key, uint8_t *IV);
 void CryptoAESEncrypt_CBCSend(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
                               uint8_t *Key, uint8_t *IV);
+void CryptoAESDecrypt_CBCSend(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
+                              uint8_t *Key, uint8_t *IV);
+void CryptoAESEncrypt_CBCReceive(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
+                                 uint8_t *Key, uint8_t *IV);
+void CryptoAESDecrypt_CBCReceive(uint16_t Count, uint8_t *PlainText, uint8_t *CipherText,
+                                 uint8_t *Key, uint8_t *IV);
 
 /* Crypto utility functions: */
-#define CRYPTO_BYTES_TO_BLOCKS(numBytes, blockSize)    ( ((numBytes) + (blockSize) - 1) / (blockSize) )
+#define CRYPTO_BYTES_TO_BLOCKS(numBytes, blockSize) \
+     ( ((numBytes) + (blockSize) - 1) / (blockSize) )
 
 #define CryptoMemoryXOR(inputBuf, destBuf, bufSize) ({ \
      uint8_t *in = (uint8_t *) inputBuf;               \
@@ -178,13 +179,5 @@ void CryptoAESEncrypt_CBCSend(uint16_t Count, uint8_t *PlainText, uint8_t *Ciphe
           *(out++) ^= *(in++);                         \
      }                                                 \
      })
-
-/* The initial value is (-1) in one's complement: */
-#define INIT_CRC32C_VALUE            ((uint32_t) 0xFFFFFFFF)
-
-/* The CCITT CRC-32 polynomial (modulo 2) in little endian (lsb-first) byte order: */
-#define LE_CRC32C_POLYNOMIAL         ((uint32_t) 0xEDB88320)
-
-uint16_t appendBufferCRC32C(uint8_t *bufferData, uint16_t bufferSize);
 
 #endif

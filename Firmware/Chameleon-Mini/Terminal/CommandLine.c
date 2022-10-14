@@ -12,7 +12,7 @@
 #define CHAR_GET_MODE   		'?'     /* <Command>? */
 #define CHAR_SET_MODE   		'='     /* <Command>=<Param> */
 #define CHAR_EXEC_MODE  		'\0'    /* <Command> */
-#define CHAR_EXEC_MODE_PARAM 	' '	   /* <Command> <Param> ... <ParamN> */
+#define CHAR_EXEC_MODE_PARAM 	' '		/* <Command> <Param> ... <ParamN> */
 
 #define IS_COMMAND_DELIMITER(c) ( \
   ((c) == CHAR_EXEC_MODE) || ((c) == CHAR_GET_MODE) || ((c) == CHAR_SET_MODE) || ((c) == CHAR_EXEC_MODE_PARAM) \
@@ -34,7 +34,7 @@
 #define NO_FUNCTION    ((void*) 0)
 
 #define STATUS_MESSAGE_TRAILER    "\r\n"
-#define OPTIONAL_ANSWER_TRAILER   "\r\n"
+#define OPTIONAL_ANSWER_TRAILER    "\r\n"
 
 /* Include all command functions */
 #include "Commands.h"
@@ -334,15 +334,6 @@ const PROGMEM CommandEntryType CommandTable[] = {
         .GetFunc        = NO_FUNCTION
     },
 #endif
-#ifdef CONFIG_ISO15693_SNIFF_SUPPORT
-    {
-        .Command        = COMMAND_AUTOTHRESHOLD,
-        .ExecFunc       = NO_FUNCTION,
-        .ExecParamFunc  = NO_FUNCTION,
-        .SetFunc        = CommandSetAutoThreshold,
-        .GetFunc        = CommandGetAutoThreshold
-    },
-#endif
 #ifdef ENABLE_RUNTESTS_TERMINAL_COMMAND
 #include "../Tests/ChameleonTerminalInclude.c"
 #endif
@@ -491,15 +482,6 @@ static void DecodeCommand(void) {
         /* Send optional answer */
         TerminalSendString(pTerminalBuffer);
         TerminalSendStringP(PSTR(OPTIONAL_ANSWER_TRAILER));
-        if (StringLength(pTerminalBuffer, TERMINAL_BUFFER_SIZE) + 1 >= TERMINAL_BUFFER_SIZE) {
-            /*
-             * Notify the user that the command line output is truncated. This can come up in the
-             * 'CONFIG=MF_DESFIRE' variants where the Makefile setting 'MEMORY_LIMITED_TESTING' is
-             * enabled by default to save space for other necessary components.
-             */
-            TerminalSendStringP(PSTR("--TRUNCATED OUTPUT--"));
-            TerminalSendStringP(PSTR(OPTIONAL_ANSWER_TRAILER));
-        }
     }
 }
 
