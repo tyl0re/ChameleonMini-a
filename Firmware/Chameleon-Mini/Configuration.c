@@ -71,7 +71,10 @@ static const MapEntryType PROGMEM ConfigurationMap[] = {
     { .Id = CONFIG_EM4233,	                  .Text = "EM4233" },
 #endif
 #ifdef CONFIG_MF_DESFIRE_SUPPORT
-    { .Id = CONFIG_MF_DESFIRE,                 .Text = "MF_DESFIRE" },
+    { .Id = CONFIG_MF_DESFIRE,                  .Text = "MF_DESFIRE" },
+    { .Id = CONFIG_MF_DESFIRE_2KEV1,            .Text = "MF_DESFIRE_2KEV1" },
+    { .Id = CONFIG_MF_DESFIRE_4KEV1,            .Text = "MF_DESFIRE_4KEV1" },
+    { .Id = CONFIG_MF_DESFIRE_4KEV2,            .Text = "MF_DESFIRE_4KEV2" },
 #endif
 };
 
@@ -90,13 +93,13 @@ static uint16_t ApplicationProcessDummy(uint8_t *ByteBuffer, uint16_t ByteCount)
 static void ApplicationGetUidDummy(ConfigurationUidType Uid) { }
 static void ApplicationSetUidDummy(ConfigurationUidType Uid) { }
 
-
 static const PROGMEM ConfigurationType ConfigurationTable[] = {
     [CONFIG_NONE] = {
         .CodecInitFunc = CodecInitDummy,
         .CodecDeInitFunc = CodecDeInitDummy,
         .CodecTaskFunc = CodecTaskDummy,
         .ApplicationInitFunc = ApplicationInitDummy,
+        .ApplicationInitRunOnceFunc = ApplicationInitDummy,
         .ApplicationResetFunc = ApplicationResetDummy,
         .ApplicationTaskFunc = ApplicationTaskDummy,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -114,6 +117,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareUltralightAppInit,
+        .ApplicationInitRunOnceFunc = MifareUltralightAppInit,
         .ApplicationResetFunc = MifareUltralightAppReset,
         .ApplicationTaskFunc = MifareUltralightAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -130,6 +134,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareUltralightCAppInit,
+        .ApplicationInitRunOnceFunc = MifareUltralightCAppInit,
         .ApplicationResetFunc = MifareUltralightCAppReset,
         .ApplicationTaskFunc = MifareUltralightAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -146,6 +151,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareUltralightEV11AppInit,
+        .ApplicationInitRunOnceFunc = MifareUltralightEV11AppInit,
         .ApplicationResetFunc = MifareUltralightAppReset,
         .ApplicationTaskFunc = MifareUltralightAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -162,6 +168,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareUltralightEV12AppInit,
+        .ApplicationInitRunOnceFunc = MifareUltralightEV12AppInit,
         .ApplicationResetFunc = MifareUltralightAppReset,
         .ApplicationTaskFunc = MifareUltralightAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -180,6 +187,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareClassicAppInitMini4B,
+        .ApplicationInitRunOnceFunc = MifareClassicAppInitMini4B,
         .ApplicationResetFunc = MifareClassicAppReset,
         .ApplicationTaskFunc = MifareClassicAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -198,6 +206,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareClassicAppInit1K,
+        .ApplicationInitRunOnceFunc = MifareClassicAppInit1K,
         .ApplicationResetFunc = MifareClassicAppReset,
         .ApplicationTaskFunc = MifareClassicAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -216,6 +225,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareClassicAppInit1K7B,
+        .ApplicationInitRunOnceFunc = MifareClassicAppInit1K7B,
         .ApplicationResetFunc = MifareClassicAppReset,
         .ApplicationTaskFunc = MifareClassicAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -234,6 +244,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareClassicAppInit4K,
+        .ApplicationInitRunOnceFunc = MifareClassicAppInit4K,
         .ApplicationResetFunc = MifareClassicAppReset,
         .ApplicationTaskFunc = MifareClassicAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -252,6 +263,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareClassicAppInit4K7B,
+        .ApplicationInitRunOnceFunc = MifareClassicAppInit4K7B,
         .ApplicationResetFunc = MifareClassicAppReset,
         .ApplicationTaskFunc = MifareClassicAppTask,
         .ApplicationTickFunc = ApplicationTickDummy,
@@ -270,6 +282,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = Sniff14443ACodecDeInit,
         .CodecTaskFunc = Sniff14443ACodecTask,
         .ApplicationInitFunc = Sniff14443AAppInit,
+        .ApplicationInitRunOnceFunc = Sniff14443AAppInit,
         .ApplicationResetFunc = Sniff14443AAppReset,
         .ApplicationTaskFunc = Sniff14443AAppTask,
         .ApplicationTickFunc = Sniff14443AAppTick,
@@ -288,6 +301,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = Reader14443ACodecDeInit,
         .CodecTaskFunc = Reader14443ACodecTask,
         .ApplicationInitFunc = Reader14443AAppInit,
+        .ApplicationInitRunOnceFunc = Reader14443AAppInit,
         .ApplicationResetFunc = Reader14443AAppReset,
         .ApplicationTaskFunc = Reader14443AAppTask,
         .ApplicationTickFunc = Reader14443AAppTick,
@@ -306,6 +320,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO15693CodecDeInit,
         .CodecTaskFunc = ISO15693CodecTask,
         .ApplicationInitFunc = VicinityAppInit,
+        .ApplicationInitRunOnceFunc = VicinityAppInit,
         .ApplicationResetFunc = VicinityAppReset,
         .ApplicationTaskFunc = VicinityAppTask,
         .ApplicationTickFunc = VicinityAppTick,
@@ -324,6 +339,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = SniffISO15693CodecDeInit,
         .CodecTaskFunc = SniffISO15693CodecTask,
         .ApplicationInitFunc = SniffISO15693AppInit,
+        .ApplicationInitRunOnceFunc = SniffISO15693AppInit,
         .ApplicationResetFunc = SniffISO15693AppReset,
         .ApplicationTaskFunc = SniffISO15693AppTask,
         .ApplicationTickFunc = SniffISO15693AppTick,
@@ -342,6 +358,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO15693CodecDeInit,
         .CodecTaskFunc = ISO15693CodecTask,
         .ApplicationInitFunc = Sl2s2002AppInit,
+        .ApplicationInitRunOnceFunc = Sl2s2002AppInit,
         .ApplicationResetFunc = Sl2s2002AppReset,
         .ApplicationTaskFunc = Sl2s2002AppTask,
         .ApplicationTickFunc = Sl2s2002AppTick,
@@ -360,6 +377,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO15693CodecDeInit,
         .CodecTaskFunc = ISO15693CodecTask,
         .ApplicationInitFunc = TITagitstandardAppInit,
+        .ApplicationInitRunOnceFunc = TITagitstandardAppInit,
         .ApplicationResetFunc = TITagitstandardAppReset,
         .ApplicationTaskFunc = TITagitstandardAppTask,
         .ApplicationTickFunc = TITagitstandardAppTick,
@@ -378,6 +396,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO15693CodecDeInit,
         .CodecTaskFunc = ISO15693CodecTask,
         .ApplicationInitFunc = TITagitplusAppInit,
+        .ApplicationInitRunOnceFunc = TITagitplusAppInit,
         .ApplicationResetFunc = TITagitplusAppReset,
         .ApplicationTaskFunc = TITagitplusAppTask,
         .ApplicationTickFunc = TITagitplusAppTick,
@@ -396,6 +415,7 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO15693CodecDeInit,
         .CodecTaskFunc = ISO15693CodecTask,
         .ApplicationInitFunc = EM4233AppInit,
+        .ApplicationInitRunOnceFunc = EM4233AppInit,
         .ApplicationResetFunc = EM4233AppReset,
         .ApplicationTaskFunc = EM4233AppTask,
         .ApplicationTickFunc = EM4233AppTick,
@@ -462,6 +482,55 @@ static const PROGMEM ConfigurationType ConfigurationTable[] = {
         .CodecDeInitFunc = ISO14443ACodecDeInit,
         .CodecTaskFunc = ISO14443ACodecTask,
         .ApplicationInitFunc = MifareDesfireEV0AppInit,
+        .ApplicationInitRunOnceFunc = MifareDesfireEV0AppInitRunOnce,
+        .ApplicationResetFunc = MifareDesfireAppReset,
+        .ApplicationTaskFunc = MifareDesfireAppTask,
+        .ApplicationTickFunc = MifareDesfireAppTick,
+        .ApplicationProcessFunc = MifareDesfireAppProcess,
+        .ApplicationGetUidFunc = MifareDesfireGetUid,
+        .ApplicationSetUidFunc = MifareDesfireSetUid,
+        .UidSize = ISO14443A_UID_SIZE_DOUBLE,
+        .MemorySize = MIFARE_CLASSIC_4K_MEM_SIZE,
+        .ReadOnly = false
+    },
+    [CONFIG_MF_DESFIRE_2KEV1] = {
+        .CodecInitFunc = ISO14443ACodecInit,
+        .CodecDeInitFunc = ISO14443ACodecDeInit,
+        .CodecTaskFunc = ISO14443ACodecTask,
+        .ApplicationInitFunc = MifareDesfire2kEV1AppInit,
+        .ApplicationInitRunOnceFunc = MifareDesfire2kEV1AppInitRunOnce,
+        .ApplicationResetFunc = MifareDesfireAppReset,
+        .ApplicationTaskFunc = MifareDesfireAppTask,
+        .ApplicationTickFunc = MifareDesfireAppTick,
+        .ApplicationProcessFunc = MifareDesfireAppProcess,
+        .ApplicationGetUidFunc = MifareDesfireGetUid,
+        .ApplicationSetUidFunc = MifareDesfireSetUid,
+        .UidSize = ISO14443A_UID_SIZE_DOUBLE,
+        .MemorySize = 2 * MIFARE_CLASSIC_1K_MEM_SIZE,
+        .ReadOnly = false
+    },
+    [CONFIG_MF_DESFIRE_4KEV1] = {
+        .CodecInitFunc = ISO14443ACodecInit,
+        .CodecDeInitFunc = ISO14443ACodecDeInit,
+        .CodecTaskFunc = ISO14443ACodecTask,
+        .ApplicationInitFunc = MifareDesfire4kEV1AppInit,
+        .ApplicationInitRunOnceFunc = MifareDesfire4kEV1AppInitRunOnce,
+        .ApplicationResetFunc = MifareDesfireAppReset,
+        .ApplicationTaskFunc = MifareDesfireAppTask,
+        .ApplicationTickFunc = MifareDesfireAppTick,
+        .ApplicationProcessFunc = MifareDesfireAppProcess,
+        .ApplicationGetUidFunc = MifareDesfireGetUid,
+        .ApplicationSetUidFunc = MifareDesfireSetUid,
+        .UidSize = ISO14443A_UID_SIZE_DOUBLE,
+        .MemorySize = MIFARE_CLASSIC_4K_MEM_SIZE,
+        .ReadOnly = false
+    },
+    [CONFIG_MF_DESFIRE_4KEV2] = {
+        .CodecInitFunc = ISO14443ACodecInit,
+        .CodecDeInitFunc = ISO14443ACodecDeInit,
+        .CodecTaskFunc = ISO14443ACodecTask,
+        .ApplicationInitFunc = MifareDesfire4kEV2AppInit,
+        .ApplicationInitRunOnceFunc = MifareDesfire4kEV2AppInitRunOnce,
         .ApplicationResetFunc = MifareDesfireAppReset,
         .ApplicationTaskFunc = MifareDesfireAppTask,
         .ApplicationTickFunc = MifareDesfireAppTick,
@@ -481,10 +550,10 @@ void ConfigurationInit(void) {
     memcpy_P(&ActiveConfiguration,
              &ConfigurationTable[CONFIG_NONE], sizeof(ConfigurationType));
 
-    ConfigurationSetById(GlobalSettings.ActiveSettingPtr->Configuration);
+    ConfigurationSetById(GlobalSettings.ActiveSettingPtr->Configuration, false);
 }
 
-void ConfigurationSetById(ConfigurationEnum Configuration) {
+void ConfigurationSetById(ConfigurationEnum Configuration, bool appInitRunOnce) {
     CodecDeInit();
 
     CommandLinePendingTaskBreak(); // break possibly pending task
@@ -496,10 +565,17 @@ void ConfigurationSetById(ConfigurationEnum Configuration) {
              &ConfigurationTable[Configuration], sizeof(ConfigurationType));
 
     CodecInit();
-    ApplicationInit();
 
-    /* Notify LED. blink according to current setting */
-    LEDHook(LED_SETTING_CHANGE, LED_BLINK + Configuration);
+    if (appInitRunOnce) {
+        ApplicationInitRunOnce();
+        /* Notify LED. blink according to current setting */
+        LEDHook(LED_SETTING_CHANGE, LED_BLINK_3X + Configuration);
+    } else {
+        ApplicationInit();
+        /* Notify LED. blink according to current setting */
+        LEDHook(LED_SETTING_CHANGE, LED_BLINK + Configuration);
+    }
+
 }
 
 void ConfigurationGetByName(char *Configuration, uint16_t BufferSize) {
@@ -514,11 +590,18 @@ MapIdType ConfigurationCheckByName(const char *Configuration) {
     return 0xff;
 }
 
-bool ConfigurationSetByName(const char *Configuration) {
+bool ConfigurationByNameIsValid(const char *Configuration) {
     MapIdType Id;
-
     if (MapTextToId(ConfigurationMap, ARRAY_COUNT(ConfigurationMap), Configuration, &Id)) {
-        ConfigurationSetById(Id);
+        return true;
+    }
+    return false;
+}
+
+bool ConfigurationSetByName(const char *Configuration, bool appInitRunOnce) {
+    MapIdType Id;
+    if (MapTextToId(ConfigurationMap, ARRAY_COUNT(ConfigurationMap), Configuration, &Id)) {
+        ConfigurationSetById(Id, appInitRunOnce);
         LogEntry(LOG_INFO_CONFIG_SET, Configuration, StringLength(Configuration, CONFIGURATION_NAME_LENGTH_MAX - 1));
         return true;
     } else {
