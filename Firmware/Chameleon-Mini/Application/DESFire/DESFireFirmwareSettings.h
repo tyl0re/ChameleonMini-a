@@ -34,20 +34,21 @@ This notice must be retained at the top of all source files where indicated.
 
 #define DESFIRE_FIRMWARE_DEBUGGING                  (1)
 
-#define DESFIRE_FIRMWARE_BUILD_TIMESTAMP            (BUILD_DATE)
-#define DESFIRE_FIRMWARE_GIT_COMMIT_ID              (COMMIT_ID)
-#define DESFIRE_FIRMWARE_REVISION                   ("0.0.2")
-#define DESFIRE_FIRMWARE_PICC_LAYOUT_REVISION       (0x02)
+#define DESFIRE_FIRMWARE_BUILD_TIMESTAMP            PSTR(BUILD_DATE)
+#define DESFIRE_FIRMWARE_GIT_COMMIT_ID              PSTR(COMMIT_ID)
+#define DESFIRE_FIRMWARE_REVISION                   PSTR("1.0.1-beta")
+#define DESFIRE_FIRMWARE_PICC_LAYOUT_REVISION       (0x04)
 
 #define DESFIRE_LITTLE_ENDIAN                       (1)
 
-#define DESFIRE_PICC_STRUCT_PACKING                 //__attribute__((aligned(1)))
+#define DESFIRE_PICC_STRUCT_PACKING                 __attribute__((aligned(1)))
 #define DESFIRE_FIRMWARE_PACKING                    __attribute__((packed))
 #define DESFIRE_FIRMWARE_ALIGNAT                    __attribute__((aligned(1)))
-#define DESFIRE_PICC_ARRAY_ALIGNAT                  //__attribute__((aligned(1)))
-#define DESFIRE_FIRMWARE_ARRAY_ALIGNAT              //__attribute__((aligned(1)))
-#define DESFIRE_FIRMWARE_ENUM_PACKING               //__attribute__((aligned(1)))
-#define DESFIRE_FIRMWARE_NOINIT                     //__attribute__ ((section (".noinit")))
+#define DESFIRE_PICC_ARRAY_ALIGNAT                  __attribute__((aligned(1)))
+#define DESFIRE_FIRMWARE_ARRAY_ALIGNAT              __attribute__((aligned(1)))
+#define DESFIRE_FIRMWARE_ENUM_PACKING               __attribute__((aligned(1)))
+#define DESFIRE_FIRMWARE_NOINIT                     __attribute__((section(".noinit")))
+#define DESFIRE_DFFRAM_SECTION                      __attribute__((section(DESFIRE_DFFRAM_SECTION_NAME)))
 
 /* Some standard boolean interpreted and other values for types and return values: */
 typedef int      BOOL;
@@ -63,7 +64,8 @@ typedef uint32_t UINT;
 #define IsFalse(rcond)                               (rcond == FALSE)
 
 /* Allow users to modify typically reserved and protected read-only data on the tag
-   like the manufacturer bytes and the serial number (set in Makefile)? */
+ * like the manufacturer bytes and the serial number (set in Makefile):
+ */
 #ifdef ENABLE_PERMISSIVE_DESFIRE_SETTINGS
 #define DESFIRE_ALLOW_PROTECTED_MODIFY         (1)
 #else
@@ -71,7 +73,8 @@ typedef uint32_t UINT;
 #endif
 
 /* Whether to auto select application ID and file before the user (input system)
-   even invokes an ISO SELECT APPLICATION [0x00 0xa4 0x04] command? */
+ * even invokes an ISO SELECT APPLICATION [0x00 0xa4 0x04] command:
+ */
 #define DESFIRE_LEGACY_SUPPORT                      (0)
 
 #endif
